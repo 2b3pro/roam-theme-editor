@@ -187,7 +187,6 @@ export function fixContrast(
   // Binary search for the right lightness
   let minL = goLighter ? fgL : 0;
   let maxL = goLighter ? 100 : fgL;
-  let bestL = fgL;
   let bestColor = foreground;
 
   for (let i = 0; i < 20; i++) {
@@ -196,7 +195,6 @@ export function fixContrast(
     const testRatio = getContrastRatio(testColor, background);
 
     if (testRatio >= targetRatio) {
-      bestL = midL;
       bestColor = testColor;
       // Try to find a lightness closer to original
       if (goLighter) {
