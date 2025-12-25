@@ -1,11 +1,59 @@
-import type { ColorPalette } from '../../types/theme';
+import { useEffect } from 'react';
+import type { ColorPalette, TypographySettings } from '../../types/theme';
+import { defaultTypography } from '../../types/theme';
 
 interface RoamMockupProps {
   palette: ColorPalette;
+  typography?: TypographySettings;
 }
 
-export function RoamMockup({ palette }: RoamMockupProps) {
+// Extract Google Font names and load them dynamically
+function useGoogleFonts(typography: TypographySettings) {
+  useEffect(() => {
+    const extractFont = (fontFamily: string): string | null => {
+      const match = fontFamily.match(/"([^"]+)"/);
+      if (match && !['SF Mono', 'Times New Roman', 'Segoe UI'].includes(match[1])) {
+        return match[1];
+      }
+      return null;
+    };
+
+    const fonts = new Set<string>();
+    const bodyFont = extractFont(typography.fontFamily);
+    const headingFont = extractFont(typography.headingFont);
+    const codeFont = extractFont(typography.codeFont);
+
+    if (bodyFont) fonts.add(bodyFont);
+    if (headingFont) fonts.add(headingFont);
+    if (codeFont) fonts.add(codeFont);
+
+    if (fonts.size === 0) return;
+
+    // Create or update Google Fonts link
+    const linkId = 'google-fonts-preview';
+    let link = document.getElementById(linkId) as HTMLLinkElement | null;
+
+    const fontQuery = Array.from(fonts)
+      .map(f => `family=${f.replace(/ /g, '+')}:wght@400;500;600;700`)
+      .join('&');
+    const href = `https://fonts.googleapis.com/css2?${fontQuery}&display=swap`;
+
+    if (!link) {
+      link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      document.head.appendChild(link);
+    }
+
+    link.href = href;
+  }, [typography.fontFamily, typography.headingFont, typography.codeFont]);
+}
+
+export function RoamMockup({ palette, typography = defaultTypography }: RoamMockupProps) {
   const { colors } = palette;
+
+  // Load Google Fonts dynamically
+  useGoogleFonts(typography);
 
   return (
     <div
@@ -14,6 +62,9 @@ export function RoamMockup({ palette }: RoamMockupProps) {
         backgroundColor: colors.background,
         borderColor: colors.border,
         color: colors.text,
+        fontFamily: typography.fontFamily,
+        fontSize: typography.fontSize,
+        lineHeight: typography.lineHeight,
       }}
     >
       {/* Top Toolbar */}
@@ -82,7 +133,7 @@ export function RoamMockup({ palette }: RoamMockupProps) {
             {/* Page Title */}
             <h1
               className="rm-title-display text-2xl font-bold mb-6"
-              style={{ color: colors.text }}
+              style={{ color: colors.text, fontFamily: typography.headingFont }}
             >
               December 25th, 2025
             </h1>
@@ -116,13 +167,13 @@ export function RoamMockup({ palette }: RoamMockupProps) {
               </Block>
 
               <Block colors={colors}>
-                <div className="rm-heading rm-level2 text-xl font-semibold" style={{ color: colors.text }}>
+                <div className="rm-heading rm-level2 text-xl font-semibold" style={{ color: colors.text, fontFamily: typography.headingFont }}>
                   Heading Level 2
                 </div>
               </Block>
 
               <Block colors={colors}>
-                <div className="rm-heading rm-level3 text-lg font-medium" style={{ color: colors.text }}>
+                <div className="rm-heading rm-level3 text-lg font-medium" style={{ color: colors.text, fontFamily: typography.headingFont }}>
                   Heading Level 3
                 </div>
               </Block>
@@ -136,6 +187,17 @@ export function RoamMockup({ palette }: RoamMockupProps) {
                     color: colors.secondary,
                   }}
                 >#tag</span> in the same line.
+              </Block>
+
+              <Block colors={colors}>
+                Inline code: <code
+                  className="px-1.5 py-0.5 rounded text-sm"
+                  style={{
+                    fontFamily: typography.codeFont,
+                    backgroundColor: colors.surface,
+                    color: colors.text,
+                  }}
+                >const theme = "custom"</code>
               </Block>
             </div>
           </div>

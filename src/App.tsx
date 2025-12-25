@@ -21,6 +21,15 @@ interface SavedState {
   typography?: TypographySettings;
 }
 
+interface ThemeFile {
+  version: string;
+  name: string;
+  lightPalette: ColorPalette;
+  darkPalette: ColorPalette;
+  typography: TypographySettings;
+  exportedAt: string;
+}
+
 function App() {
   const [selectedPresetId, setSelectedPresetId] = useState('default');
   const [mode, setMode] = useState<ThemeMode>('light');
@@ -216,6 +225,73 @@ ${typographyCSS}
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Download theme as JSON
+  const handleDownloadTheme = () => {
+    const themeData: ThemeFile = {
+      version: '1.0',
+      name: lightPalette.name || 'Custom Theme',
+      lightPalette,
+      darkPalette,
+      typography,
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(themeData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `roam-theme-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Download CSS file
+  const handleDownloadCSS = () => {
+    const css = generateCSS();
+    const blob = new Blob([css], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `roam-theme-${Date.now()}.css`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Upload theme from JSON
+  const handleUploadTheme = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const themeData: ThemeFile = JSON.parse(content);
+
+        // Validate theme structure
+        if (themeData.lightPalette?.colors && themeData.darkPalette?.colors) {
+          setLightPalette(themeData.lightPalette);
+          setDarkPalette(themeData.darkPalette);
+          if (themeData.typography) {
+            setTypography(themeData.typography);
+          }
+          setSelectedPresetId('custom');
+        } else {
+          alert('Invalid theme file format');
+        }
+      } catch (err) {
+        alert('Failed to parse theme file');
+        console.error('Theme import error:', err);
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so same file can be re-uploaded
+    event.target.value = '';
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
@@ -240,6 +316,53 @@ ${typographyCSS}
                   {m.charAt(0).toUpperCase() + m.slice(1)}
                 </button>
               ))}
+            </div>
+
+            {/* Upload Theme */}
+            <label className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span className="hidden sm:inline">Import</span>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleUploadTheme}
+                className="hidden"
+              />
+            </label>
+
+            {/* Download Menu */}
+            <div className="relative group">
+              <button className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span className="hidden sm:inline">Export</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                <button
+                  onClick={handleDownloadTheme}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Theme (.json)
+                </button>
+                <button
+                  onClick={handleDownloadCSS}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  CSS File (.css)
+                </button>
+              </div>
             </div>
 
             {/* Copy CSS Button */}
@@ -511,7 +634,7 @@ ${typographyCSS}
                 </pre>
               </div>
             ) : (
-              <RoamMockup palette={activePalette} />
+              <RoamMockup palette={activePalette} typography={typography} />
             )}
           </div>
         </div>
