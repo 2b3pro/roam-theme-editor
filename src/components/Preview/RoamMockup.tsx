@@ -199,6 +199,63 @@ export function RoamMockup({ palette, typography = defaultTypography }: RoamMock
                   }}
                 >const theme = "custom"</code>
               </Block>
+
+              {/* Code Block */}
+              <Block colors={colors}>
+                <div
+                  className="rm-code-block rounded-md p-3 mt-1 overflow-x-auto"
+                  style={{
+                    backgroundColor: colors.surface,
+                    fontFamily: typography.codeFont,
+                    fontSize: '0.875em',
+                  }}
+                >
+                  <pre style={{ margin: 0, color: colors.text }}>
+                    <code>{`function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+
+greet("Roam");`}</code>
+                  </pre>
+                </div>
+              </Block>
+
+              {/* External Link */}
+              <Block colors={colors}>
+                External link: <a
+                  href="#"
+                  className="inline-flex items-center gap-1 hover:underline"
+                  style={{ color: colors.primary }}
+                  onClick={(e) => e.preventDefault()}
+                >
+                  https://roamresearch.com
+                  <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </Block>
+
+              {/* TODO Item */}
+              <Block colors={colors}>
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="w-4 h-4 rounded border-2 flex-shrink-0"
+                    style={{ borderColor: colors.textMuted }}
+                  />
+                  <span>{'{{[[TODO]]}}'} Review theme settings</span>
+                </span>
+              </Block>
+
+              {/* Block Reference */}
+              <Block colors={colors}>
+                See also: <span
+                  className="rm-block-ref px-1 rounded cursor-pointer hover:bg-opacity-50"
+                  style={{
+                    backgroundColor: `${colors.primary}15`,
+                    color: colors.text,
+                  }}
+                >((referenced block))</span>
+              </Block>
             </div>
           </div>
         </div>

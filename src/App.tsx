@@ -1,8 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { RoamMockup } from './components/Preview/RoamMockup';
 import { ColorPicker } from './components/Editor/ColorPicker';
 import { ContrastChecker } from './components/Editor/ContrastChecker';
 import { TypographyPanel } from './components/Editor/TypographyPanel';
+import { ImagePaletteExtractor } from './components/Editor/ImagePaletteExtractor';
+import { UrlPaletteImporter } from './components/Editor/UrlPaletteImporter';
+import { useThemeHistory, useUndoRedoShortcuts } from './hooks/useHistory';
 import { palettePresets, getPaletteById } from './data/palettes';
 import { generateRandomPalette, harmonyDescriptions, hexToHue, type ColorHarmony } from './utils/colorGenerator';
 import type { ColorPalette, ThemeMode, TypographySettings } from './types/theme';
@@ -45,6 +48,55 @@ function App() {
   const [baseColor, setBaseColor] = useState('#3b82f6');
   const [activeTab, setActiveTab] = useState<EditorTab>('palette');
   const [typography, setTypography] = useState<TypographySettings>(defaultTypography);
+  const [editorDarkMode, setEditorDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('roam-theme-editor-dark-mode');
+      if (saved !== null) return saved === 'true';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (editorDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('roam-theme-editor-dark-mode', String(editorDarkMode));
+  }, [editorDarkMode]);
+
+  // Undo/Redo history
+  const { pushSnapshot, undo, redo, canUndo, canRedo } = useThemeHistory();
+
+  const handleUndo = useCallback(() => {
+    const snapshot = undo();
+    if (snapshot) {
+      setLightPalette(snapshot.lightPalette);
+      setDarkPalette(snapshot.darkPalette);
+      setTypography(snapshot.typography);
+      setSelectedPresetId('custom');
+    }
+  }, [undo]);
+
+  const handleRedo = useCallback(() => {
+    const snapshot = redo();
+    if (snapshot) {
+      setLightPalette(snapshot.lightPalette);
+      setDarkPalette(snapshot.darkPalette);
+      setTypography(snapshot.typography);
+      setSelectedPresetId('custom');
+    }
+  }, [redo]);
+
+  // Keyboard shortcuts for undo/redo
+  useUndoRedoShortcuts(handleUndo, handleRedo);
+
+  // Push snapshots when theme changes
+  useEffect(() => {
+    pushSnapshot({ lightPalette, darkPalette, typography });
+  }, [lightPalette, darkPalette, typography, pushSnapshot]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -301,6 +353,55 @@ ${typographyCSS}
             Roam Theme Editor
           </h1>
           <div className="flex items-center gap-4">
+            {/* Undo/Redo Buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className={`p-2 rounded-lg transition-colors ${
+                  canUndo
+                    ? 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                }`}
+                title="Undo (Ctrl+Z)"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+              </button>
+              <button
+                onClick={handleRedo}
+                disabled={!canRedo}
+                className={`p-2 rounded-lg transition-colors ${
+                  canRedo
+                    ? 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                }`}
+                title="Redo (Ctrl+Y)"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Editor Dark Mode Toggle */}
+            <button
+              onClick={() => setEditorDarkMode(!editorDarkMode)}
+              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title={editorDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {editorDarkMode ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+
             {/* Mode Toggle */}
             <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
               {(['light', 'dark', 'system'] as ThemeMode[]).map((m) => (
@@ -525,6 +626,28 @@ ${typographyCSS}
                           Random
                         </button>
                       </div>
+                    </div>
+
+                    {/* Extract from Image */}
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <ImagePaletteExtractor
+                        onApplyPalette={(light, dark) => {
+                          setLightPalette(light);
+                          setDarkPalette(dark);
+                          setSelectedPresetId('custom');
+                        }}
+                      />
+                    </div>
+
+                    {/* Import from URL */}
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <UrlPaletteImporter
+                        onApplyPalette={(light, dark) => {
+                          setLightPalette(light);
+                          setDarkPalette(dark);
+                          setSelectedPresetId('custom');
+                        }}
+                      />
                     </div>
                   </div>
                 )}
