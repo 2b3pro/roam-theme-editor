@@ -167,15 +167,21 @@ export function RoamMockup({ palette, typography = defaultTypography }: RoamMock
               </Block>
 
               <Block colors={colors}>
-                <div className="rm-heading rm-level2 text-xl font-semibold" style={{ color: colors.text, fontFamily: typography.headingFont }}>
-                  Heading Level 2
-                </div>
+                <h1 className="rm-heading rm-level1 text-2xl font-semibold" style={{ color: colors.text, fontFamily: typography.headingFont }}>
+                  Heading Level 1
+                </h1>
               </Block>
 
               <Block colors={colors}>
-                <div className="rm-heading rm-level3 text-lg font-medium" style={{ color: colors.text, fontFamily: typography.headingFont }}>
+                <h2 className="rm-heading rm-level2 text-xl font-semibold" style={{ color: colors.text, fontFamily: typography.headingFont }}>
+                  Heading Level 2
+                </h2>
+              </Block>
+
+              <Block colors={colors}>
+                <h3 className="rm-heading rm-level3 text-lg font-medium" style={{ color: colors.text, fontFamily: typography.headingFont }}>
                   Heading Level 3
-                </div>
+                </h3>
               </Block>
 
               <Block colors={colors}>
