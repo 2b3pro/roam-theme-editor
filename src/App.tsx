@@ -1,18 +1,24 @@
 import { useState, useMemo, useEffect } from 'react';
 import { RoamMockup } from './components/Preview/RoamMockup';
 import { ColorPicker } from './components/Editor/ColorPicker';
+import { ContrastChecker } from './components/Editor/ContrastChecker';
+import { TypographyPanel } from './components/Editor/TypographyPanel';
 import { palettePresets, getPaletteById } from './data/palettes';
 import { generateRandomPalette, harmonyDescriptions, hexToHue, type ColorHarmony } from './utils/colorGenerator';
-import type { ColorPalette, ThemeMode } from './types/theme';
+import type { ColorPalette, ThemeMode, TypographySettings } from './types/theme';
+import { defaultTypography } from './types/theme';
 
 const STORAGE_KEY = 'roam-theme-editor-state';
 const HARMONY_OPTIONS: ColorHarmony[] = ['complementary', 'analogous', 'triadic', 'split-complementary', 'monochromatic'];
+
+type EditorTab = 'palette' | 'colors' | 'contrast' | 'fonts';
 
 interface SavedState {
   selectedPresetId: string;
   mode: ThemeMode;
   lightPalette: ColorPalette;
   darkPalette: ColorPalette;
+  typography?: TypographySettings;
 }
 
 function App() {
@@ -28,6 +34,8 @@ function App() {
   const [showCode, setShowCode] = useState(false);
   const [selectedHarmony, setSelectedHarmony] = useState<ColorHarmony>('complementary');
   const [baseColor, setBaseColor] = useState('#3b82f6');
+  const [activeTab, setActiveTab] = useState<EditorTab>('palette');
+  const [typography, setTypography] = useState<TypographySettings>(defaultTypography);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -39,6 +47,7 @@ function App() {
         setMode(state.mode);
         setLightPalette(state.lightPalette);
         setDarkPalette(state.darkPalette);
+        if (state.typography) setTypography(state.typography);
       }
     } catch (e) {
       console.error('Failed to load saved state:', e);
@@ -53,12 +62,13 @@ function App() {
         mode,
         lightPalette,
         darkPalette,
+        typography,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {
       console.error('Failed to save state:', e);
     }
-  }, [selectedPresetId, mode, lightPalette, darkPalette]);
+  }, [selectedPresetId, mode, lightPalette, darkPalette, typography]);
 
   // Handle palette preset selection
   const handlePresetChange = (presetId: string) => {
@@ -101,8 +111,42 @@ function App() {
     setSelectedPresetId('custom');
   };
 
+  // Extract Google Font names from font-family strings
+  const getGoogleFonts = () => {
+    const fonts: string[] = [];
+    const extractFont = (fontFamily: string) => {
+      const match = fontFamily.match(/"([^"]+)"/);
+      if (match && !['SF Mono', 'Times New Roman', 'Segoe UI'].includes(match[1])) {
+        return match[1];
+      }
+      return null;
+    };
+
+    const bodyFont = extractFont(typography.fontFamily);
+    const headingFont = extractFont(typography.headingFont);
+    const codeFont = extractFont(typography.codeFont);
+
+    if (bodyFont) fonts.push(bodyFont);
+    if (headingFont && headingFont !== bodyFont) fonts.push(headingFont);
+    if (codeFont) fonts.push(codeFont);
+
+    return fonts;
+  };
+
   // Generate CSS output
   const generateCSS = () => {
+    const googleFonts = getGoogleFonts();
+    const fontImport = googleFonts.length > 0
+      ? `/* Google Fonts */\n@import url('https://fonts.googleapis.com/css2?${googleFonts.map(f => `family=${f.replace(/ /g, '+')}:wght@400;500;600;700`).join('&')}&display=swap');\n\n`
+      : '';
+
+    const typographyCSS = `  /* Typography */
+  --main-font: ${typography.fontFamily};
+  --main-font-size: ${typography.fontSize};
+  --line-height: ${typography.lineHeight};
+  --heading-font: ${typography.headingFont};
+  --code-font: ${typography.codeFont};`;
+
     const lightCSS = `/* Light Mode */
 :root {
   --page-link-color: ${lightPalette.colors.primary};
@@ -113,6 +157,7 @@ function App() {
   --main-font-color: ${lightPalette.colors.text};
   --page-bracket-color: ${lightPalette.colors.textMuted};
   --highlight-background-color: ${lightPalette.colors.primary}30;
+${typographyCSS}
 }`;
 
     const darkCSS = `/* Dark Mode */
@@ -125,12 +170,13 @@ function App() {
   --main-font-color: ${darkPalette.colors.text};
   --page-bracket-color: ${darkPalette.colors.textMuted};
   --highlight-background-color: ${darkPalette.colors.primary}30;
+${typographyCSS}
 }`;
 
-    if (mode === 'light') return lightCSS;
-    if (mode === 'dark') return darkCSS;
+    if (mode === 'light') return fontImport + lightCSS;
+    if (mode === 'dark') return fontImport + darkCSS;
 
-    return `/* Roam Theme - Auto Light/Dark */
+    return `${fontImport}/* Roam Theme - Auto Light/Dark */
 
 /* Light Mode */
 @media (prefers-color-scheme: light) {
@@ -143,6 +189,7 @@ function App() {
     --main-font-color: ${lightPalette.colors.text};
     --page-bracket-color: ${lightPalette.colors.textMuted};
     --highlight-background-color: ${lightPalette.colors.primary}30;
+${typographyCSS}
   }
 }
 
@@ -157,6 +204,7 @@ function App() {
     --main-font-color: ${darkPalette.colors.text};
     --page-bracket-color: ${darkPalette.colors.textMuted};
     --highlight-background-color: ${darkPalette.colors.primary}30;
+${typographyCSS}
   }
 }`;
   };
@@ -223,168 +271,208 @@ function App() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Editor Panel */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Palette Selector */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Color Palette
-              </h2>
-              <div className="grid grid-cols-3 gap-2">
-                {palettePresets.map((preset) => (
+          <div className="lg:col-span-1 space-y-4">
+            {/* Tab Navigation */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex border-b border-gray-200 dark:border-gray-700">
+                {([
+                  { id: 'palette', label: 'Palette', icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01' },
+                  { id: 'colors', label: 'Colors', icon: 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z' },
+                  { id: 'contrast', label: 'Contrast', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+                  { id: 'fonts', label: 'Fonts', icon: 'M4 6h16M4 12h8m-8 6h16' },
+                ] as { id: EditorTab; label: string; icon: string }[]).map((tab) => (
                   <button
-                    key={preset.id}
-                    onClick={() => handlePresetChange(preset.id)}
-                    className={`p-2 rounded-lg border-2 transition-all ${
-                      selectedPresetId === preset.id
-                        ? 'border-blue-500 ring-2 ring-blue-200'
-                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-3 text-sm font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 -mb-px'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
-                    <div className="flex gap-0.5 mb-1">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: preset.light.colors.primary }}
-                      />
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: preset.light.colors.secondary }}
-                      />
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: preset.dark.colors.primary }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      {preset.name}
-                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
+                    </svg>
+                    <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 ))}
               </div>
-              {selectedPresetId === 'custom' && (
-                <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-                  Custom colors (modified from preset)
-                </p>
-              )}
 
-              {/* Randomize Section */}
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Generate Palette
-                </h3>
+              {/* Tab Content */}
+              <div className="p-4">
+                {/* Palette Tab */}
+                {activeTab === 'palette' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-2">
+                      {palettePresets.map((preset) => (
+                        <button
+                          key={preset.id}
+                          onClick={() => handlePresetChange(preset.id)}
+                          className={`p-2 rounded-lg border-2 transition-all ${
+                            selectedPresetId === preset.id
+                              ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex gap-0.5 mb-1">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: preset.light.colors.primary }}
+                            />
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: preset.light.colors.secondary }}
+                            />
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: preset.dark.colors.primary }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            {preset.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedPresetId === 'custom' && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Custom colors (modified from preset)
+                      </p>
+                    )}
 
-                {/* Base Color */}
-                <div className="flex items-center gap-2 mb-3">
-                  <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                    Base Color
-                  </label>
-                  <div className="flex-1 flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={baseColor}
-                      onChange={(e) => setBaseColor(e.target.value)}
-                      className="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
-                    />
-                    <input
-                      type="text"
-                      value={baseColor}
-                      onChange={(e) => setBaseColor(e.target.value)}
-                      className="flex-1 px-2 py-1 text-xs font-mono rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
+                    {/* Generate Palette */}
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Generate Palette
+                      </h3>
+
+                      <div className="flex items-center gap-2 mb-3">
+                        <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                          Base Color
+                        </label>
+                        <div className="flex-1 flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={baseColor}
+                            onChange={(e) => setBaseColor(e.target.value)}
+                            className="w-8 h-8 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                          />
+                          <input
+                            type="text"
+                            value={baseColor}
+                            onChange={(e) => setBaseColor(e.target.value)}
+                            className="flex-1 px-2 py-1 text-xs font-mono rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <select
+                        value={selectedHarmony}
+                        onChange={(e) => setSelectedHarmony(e.target.value as ColorHarmony)}
+                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-2"
+                      >
+                        {HARMONY_OPTIONS.map((h) => (
+                          <option key={h} value={h}>
+                            {h.charAt(0).toUpperCase() + h.slice(1).replace('-', ' ')}
+                          </option>
+                        ))}
+                      </select>
+
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        {harmonyDescriptions[selectedHarmony]}
+                      </p>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRandomize(true)}
+                          className="flex-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                          </svg>
+                          From Base
+                        </button>
+                        <button
+                          onClick={() => handleRandomize(false)}
+                          className="flex-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Random
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Harmony Selection */}
-                <div className="flex gap-2 mb-2">
-                  <select
-                    value={selectedHarmony}
-                    onChange={(e) => setSelectedHarmony(e.target.value as ColorHarmony)}
-                    className="flex-1 px-2 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {HARMONY_OPTIONS.map((h) => (
-                      <option key={h} value={h}>
-                        {h.charAt(0).toUpperCase() + h.slice(1).replace('-', ' ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* Colors Tab */}
+                {activeTab === 'colors' && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      Editing {mode === 'system' ? 'Light' : mode.charAt(0).toUpperCase() + mode.slice(1)} mode
+                    </p>
+                    <ColorPicker
+                      label="Primary (Links)"
+                      value={currentPalette.colors.primary}
+                      onChange={(v) => updateColor('primary', v)}
+                    />
+                    <ColorPicker
+                      label="Secondary (Tags)"
+                      value={currentPalette.colors.secondary}
+                      onChange={(v) => updateColor('secondary', v)}
+                    />
+                    <ColorPicker
+                      label="Background"
+                      value={currentPalette.colors.background}
+                      onChange={(v) => updateColor('background', v)}
+                    />
+                    <ColorPicker
+                      label="Surface (Sidebar)"
+                      value={currentPalette.colors.surface}
+                      onChange={(v) => updateColor('surface', v)}
+                    />
+                    <ColorPicker
+                      label="Text"
+                      value={currentPalette.colors.text}
+                      onChange={(v) => updateColor('text', v)}
+                    />
+                    <ColorPicker
+                      label="Text Muted"
+                      value={currentPalette.colors.textMuted}
+                      onChange={(v) => updateColor('textMuted', v)}
+                    />
+                    <ColorPicker
+                      label="Border"
+                      value={currentPalette.colors.border}
+                      onChange={(v) => updateColor('border', v)}
+                    />
+                    {mode === 'system' && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 pt-2">
+                        Switch to Light or Dark mode to edit individual palettes.
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  {harmonyDescriptions[selectedHarmony]}
-                </p>
+                {/* Contrast Tab */}
+                {activeTab === 'contrast' && (
+                  <ContrastChecker
+                    palette={currentPalette}
+                    onFixColor={(key, value) => {
+                      updateColor(key, value);
+                    }}
+                  />
+                )}
 
-                {/* Generate Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleRandomize(true)}
-                    className="flex-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                    </svg>
-                    From Base
-                  </button>
-                  <button
-                    onClick={() => handleRandomize(false)}
-                    className="flex-1 px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Random
-                  </button>
-                </div>
+                {/* Fonts Tab */}
+                {activeTab === 'fonts' && (
+                  <TypographyPanel
+                    typography={typography}
+                    onChange={setTypography}
+                  />
+                )}
               </div>
-            </div>
-
-            {/* Color Pickers */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Colors ({mode === 'system' ? 'Editing Light' : mode.charAt(0).toUpperCase() + mode.slice(1)})
-              </h2>
-
-              <div className="space-y-4">
-                <ColorPicker
-                  label="Primary (Links)"
-                  value={currentPalette.colors.primary}
-                  onChange={(v) => updateColor('primary', v)}
-                />
-                <ColorPicker
-                  label="Secondary (Tags)"
-                  value={currentPalette.colors.secondary}
-                  onChange={(v) => updateColor('secondary', v)}
-                />
-                <ColorPicker
-                  label="Background"
-                  value={currentPalette.colors.background}
-                  onChange={(v) => updateColor('background', v)}
-                />
-                <ColorPicker
-                  label="Surface (Sidebar)"
-                  value={currentPalette.colors.surface}
-                  onChange={(v) => updateColor('surface', v)}
-                />
-                <ColorPicker
-                  label="Text"
-                  value={currentPalette.colors.text}
-                  onChange={(v) => updateColor('text', v)}
-                />
-                <ColorPicker
-                  label="Text Muted"
-                  value={currentPalette.colors.textMuted}
-                  onChange={(v) => updateColor('textMuted', v)}
-                />
-                <ColorPicker
-                  label="Border"
-                  value={currentPalette.colors.border}
-                  onChange={(v) => updateColor('border', v)}
-                />
-              </div>
-
-              {mode === 'system' && (
-                <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                  Switch to Light or Dark mode to edit individual palettes.
-                </p>
-              )}
             </div>
 
             {/* Instructions */}
