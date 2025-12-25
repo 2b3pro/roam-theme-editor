@@ -5,11 +5,14 @@ import { ContrastChecker } from './components/Editor/ContrastChecker';
 import { TypographyPanel } from './components/Editor/TypographyPanel';
 import { ImagePaletteExtractor } from './components/Editor/ImagePaletteExtractor';
 import { UrlPaletteImporter } from './components/Editor/UrlPaletteImporter';
+import { ElementEditorModal } from './components/Editor/ElementEditorModal';
 import { useThemeHistory, useUndoRedoShortcuts } from './hooks/useHistory';
 import { palettePresets, getPaletteById } from './data/palettes';
 import { generateRandomPalette, harmonyDescriptions, hexToHue, type ColorHarmony } from './utils/colorGenerator';
 import type { ColorPalette, ThemeMode, TypographySettings } from './types/theme';
 import { defaultTypography } from './types/theme';
+import type { ElementStyleOverride } from './types/elementStyles';
+import { getElementById, generateElementCSS } from './types/elementStyles';
 
 const STORAGE_KEY = 'roam-theme-editor-state';
 const HARMONY_OPTIONS: ColorHarmony[] = ['complementary', 'analogous', 'triadic', 'split-complementary', 'monochromatic'];
@@ -56,6 +59,9 @@ function App() {
     }
     return false;
   });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [elementOverrides, setElementOverrides] = useState<ElementStyleOverride[]>([]);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -172,6 +178,39 @@ function App() {
     setSelectedPresetId('custom');
   };
 
+  // Element click handler for opening the editor modal
+  const handleElementClick = useCallback((elementId: string) => {
+    setSelectedElementId(elementId);
+  }, []);
+
+  // Save element style override
+  const handleElementSave = useCallback((override: ElementStyleOverride) => {
+    setElementOverrides((prev) => {
+      const existing = prev.findIndex((o) => o.elementId === override.elementId);
+      if (existing >= 0) {
+        // Check if override is empty (no styles, no pseudo-element styles, and no custom CSS)
+        const hasStyles = Object.values(override.styles).some((v) => v);
+        const hasBeforeStyles = override.beforeStyles && Object.values(override.beforeStyles).some((v) => v);
+        const hasAfterStyles = override.afterStyles && Object.values(override.afterStyles).some((v) => v);
+        const hasCustomCSS = override.customCSS?.trim();
+        if (!hasStyles && !hasBeforeStyles && !hasAfterStyles && !hasCustomCSS) {
+          // Remove the override if it's empty
+          return prev.filter((_, i) => i !== existing);
+        }
+        // Update existing
+        const updated = [...prev];
+        updated[existing] = override;
+        return updated;
+      }
+      // Add new
+      return [...prev, override];
+    });
+  }, []);
+
+  // Get the selected element definition
+  const selectedElement = selectedElementId ? getElementById(selectedElementId) : null;
+  const selectedOverride = elementOverrides.find((o) => o.elementId === selectedElementId);
+
   // Extract Google Font names from font-family strings
   const getGoogleFonts = () => {
     const fonts: string[] = [];
@@ -234,10 +273,14 @@ ${typographyCSS}
 ${typographyCSS}
 }`;
 
-    if (mode === 'light') return fontImport + lightCSS;
-    if (mode === 'dark') return fontImport + darkCSS;
+    // Add element-specific overrides
+    const elementCSS = generateElementCSS(elementOverrides);
+    const elementSection = elementCSS ? '\n\n/* Element-specific styles */\n' + elementCSS : '';
 
-    return `${fontImport}/* Roam Theme - Auto Light/Dark */
+    if (mode === 'light') return fontImport + lightCSS + elementSection;
+    if (mode === 'dark') return fontImport + darkCSS + elementSection;
+
+    const systemModeCSS = `${fontImport}/* Roam Theme - Auto Light/Dark */
 
 /* Light Mode */
 @media (prefers-color-scheme: light) {
@@ -268,6 +311,8 @@ ${typographyCSS}
 ${typographyCSS}
   }
 }`;
+
+    return systemModeCSS + elementSection;
   };
 
   const handleCopyCSS = async () => {
@@ -385,6 +430,21 @@ ${typographyCSS}
               </button>
             </div>
 
+            {/* Sidebar Toggle */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className={`p-2 rounded-lg transition-colors ${
+                sidebarCollapsed
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              title={sidebarCollapsed ? 'Show editor panel' : 'Hide editor panel'}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+            </button>
+
             {/* Editor Dark Mode Toggle */}
             <button
               onClick={() => setEditorDarkMode(!editorDarkMode)}
@@ -492,10 +552,10 @@ ${typographyCSS}
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className={`mx-auto px-6 py-8 transition-all ${sidebarCollapsed ? 'max-w-5xl' : 'max-w-7xl'}`}>
+        <div className={`grid gap-8 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
           {/* Editor Panel */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className={`lg:col-span-1 space-y-4 transition-all ${sidebarCollapsed ? 'hidden' : ''}`}>
             {/* Tab Navigation */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex border-b border-gray-200 dark:border-gray-700">
@@ -757,11 +817,37 @@ ${typographyCSS}
                 </pre>
               </div>
             ) : (
-              <RoamMockup palette={activePalette} typography={typography} />
+              <div className="relative">
+                <div className="absolute top-2 right-2 z-10 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur rounded-lg px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Click elements to edit</span>
+                  {elementOverrides.length > 0 && (
+                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                      {elementOverrides.length} customized
+                    </span>
+                  )}
+                </div>
+                <RoamMockup
+                  palette={activePalette}
+                  typography={typography}
+                  onElementClick={handleElementClick}
+                  elementOverrides={elementOverrides}
+                />
+              </div>
             )}
           </div>
         </div>
       </main>
+
+      {/* Element Editor Modal */}
+      {selectedElement && (
+        <ElementEditorModal
+          element={selectedElement}
+          override={selectedOverride}
+          onSave={handleElementSave}
+          onClose={() => setSelectedElementId(null)}
+          paletteColors={activePalette.colors}
+        />
+      )}
     </div>
   );
 }

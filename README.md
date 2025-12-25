@@ -1,73 +1,139 @@
-# React + TypeScript + Vite
+# Roam Theme Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A visual theme editor for [Roam Research](https://roamresearch.com) that lets you create, customize, and preview CSS themes without writing code.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Visual Color Palette Editor** - Choose from preset palettes (Nord, Dracula, Solarized, etc.) or create your own
+- **Color Harmony Generator** - Auto-generate palettes using complementary, analogous, triadic, and other color schemes
+- **Image Palette Extraction** - Upload an image to extract a matching color palette
+- **URL Palette Import** - Import palettes from Coolors URLs
+- **Typography Controls** - Customize fonts, sizes, and line heights with Google Fonts integration
+- **Live Preview** - See your theme changes in real-time on a representative Roam interface
+- **Element-Level Editing** - Click any element in the preview to customize its specific styles
+- **Light/Dark/System Modes** - Create themes for light mode, dark mode, or auto-switching based on system preference
+- **Contrast Checker** - WCAG accessibility validation for text/background combinations
+- **Undo/Redo** - Full history support with keyboard shortcuts (Ctrl+Z / Ctrl+Y)
+- **Export Options** - Copy CSS to clipboard or download as .css/.json files
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Prerequisites
 
-## Expanding the ESLint configuration
+- Node.js 18+
+- npm or yarn
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```bash
+# Clone the repository
+git clone https://github.com/2b3pro/roam-theme-editor.git
+cd roam-theme-editor
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Install dependencies
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The app will be available at `http://localhost:5173`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Build for Production
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
+npm run preview
 ```
+
+## How to Use
+
+### 1. Choose a Color Palette
+
+- Select a **preset palette** from the Palette tab (Nord, Dracula, Solarized, etc.)
+- Or **generate a palette** by picking a base color and harmony type
+- Or **extract colors from an image** by uploading a photo
+- Or **import from Coolors** by pasting a Coolors URL
+
+### 2. Customize Colors
+
+Switch to the **Colors tab** to fine-tune individual colors:
+- Primary (links, highlights)
+- Secondary (tags)
+- Background
+- Surface (sidebar, cards)
+- Text & Text Muted
+- Borders
+
+### 3. Adjust Typography
+
+In the **Fonts tab**, customize:
+- Body font family
+- Heading font
+- Code font
+- Font sizes and line heights
+
+### 4. Edit Individual Elements
+
+Click on any element in the **Preview** panel to open the element editor:
+- Adjust element-specific styles (colors, sizes, spacing)
+- Add prepend/append text or emojis (e.g., add icons before headings)
+- Write custom CSS for advanced styling
+
+### 5. Check Accessibility
+
+Use the **Contrast tab** to verify your color choices meet WCAG accessibility standards.
+
+### 6. Export Your Theme
+
+- Click **Copy CSS** to copy the generated CSS to your clipboard
+- Or use the **Export** dropdown to download as CSS or JSON
+
+### 7. Apply to Roam
+
+1. In Roam Research, navigate to `[[roam/css]]`
+2. Create a new code block with `css` language
+3. Paste your copied CSS
+4. Your theme is now active!
+
+## Theme Modes
+
+- **Light Mode** - Generates CSS for light backgrounds
+- **Dark Mode** - Generates CSS for dark backgrounds
+- **System Mode** - Generates CSS with `@media (prefers-color-scheme)` queries for automatic switching
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Z` / `Cmd+Z` | Undo |
+| `Ctrl+Y` / `Cmd+Y` | Redo |
+| `Escape` | Close modal |
+
+## Tech Stack
+
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Vite
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## Support
+
+If you find this tool useful, consider supporting its development:
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Me-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/2b3pro)
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?logo=paypal&logoColor=white)](https://paypal.me/2b3/5)
+
+---
+
+**[View on GitHub](https://github.com/2b3pro/roam-theme-editor)** | Made with love for the Roam community
