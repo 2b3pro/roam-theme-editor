@@ -6,6 +6,7 @@ import { TypographyPanel } from './components/Editor/TypographyPanel';
 import { ImagePaletteExtractor } from './components/Editor/ImagePaletteExtractor';
 import { UrlPaletteImporter } from './components/Editor/UrlPaletteImporter';
 import { ElementEditorModal } from './components/Editor/ElementEditorModal';
+import { Footer } from './components/Footer';
 import { useThemeHistory, useUndoRedoShortcuts } from './hooks/useHistory';
 import { palettePresets, getPaletteById } from './data/palettes';
 import { generateRandomPalette, harmonyDescriptions, hexToHue, type ColorHarmony } from './utils/colorGenerator';
@@ -837,6 +838,8 @@ ${typographyCSS}
           </div>
         </div>
       </main>
+
+      <Footer />
 
       {/* Element Editor Modal */}
       {selectedElement && (
