@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { RoamMockup } from './components/Preview/RoamMockup';
 import { ColorPicker } from './components/Editor/ColorPicker';
 import { ContrastChecker } from './components/Editor/ContrastChecker';
@@ -6,6 +6,7 @@ import { TypographyPanel } from './components/Editor/TypographyPanel';
 import { ImagePaletteExtractor } from './components/Editor/ImagePaletteExtractor';
 import { UrlPaletteImporter } from './components/Editor/UrlPaletteImporter';
 import { ElementEditorModal } from './components/Editor/ElementEditorModal';
+import { DonationModal } from './components/DonationModal';
 import { Footer } from './components/Footer';
 import { useThemeHistory, useUndoRedoShortcuts } from './hooks/useHistory';
 import { palettePresets, getPaletteById } from './data/palettes';
@@ -17,7 +18,31 @@ import { getElementById, generateElementCSS } from './types/elementStyles';
 import { generateBaseCSSRules } from './utils/baseCSSRules';
 
 const STORAGE_KEY = 'roam-theme-editor-state';
+const EXPORT_COUNT_COOKIE = 'roam-theme-editor-export-count';
+const DONATION_THRESHOLD = 3;
 const HARMONY_OPTIONS: ColorHarmony[] = ['complementary', 'analogous', 'triadic', 'split-complementary', 'monochromatic'];
+
+// Cookie helper functions
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function setCookie(name: string, value: string, days: number = 365): void {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function getExportCount(): number {
+  const count = getCookie(EXPORT_COUNT_COOKIE);
+  return count ? parseInt(count, 10) : 0;
+}
+
+function incrementExportCount(): number {
+  const newCount = getExportCount() + 1;
+  setCookie(EXPORT_COUNT_COOKIE, String(newCount));
+  return newCount;
+}
 
 type EditorTab = 'palette' | 'colors' | 'contrast' | 'fonts';
 
@@ -64,6 +89,8 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [elementOverrides, setElementOverrides] = useState<ElementStyleOverride[]>([]);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const pendingExportAction = useRef<(() => void) | null>(null);
 
   // Apply dark mode class to document
   useEffect(() => {
@@ -325,15 +352,16 @@ ${baseRules}`;
     return systemModeCSS + elementSection;
   };
 
-  const handleCopyCSS = async () => {
+  // Actual copy/export functions
+  const doCopyCSS = async () => {
     const css = generateCSS();
     await navigator.clipboard.writeText(css);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    incrementExportCount();
   };
 
-  // Download theme as JSON
-  const handleDownloadTheme = () => {
+  const doDownloadTheme = () => {
     const themeData: ThemeFile = {
       version: '1.0',
       name: lightPalette.name || 'Custom Theme',
@@ -351,10 +379,10 @@ ${baseRules}`;
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    incrementExportCount();
   };
 
-  // Download CSS file
-  const handleDownloadCSS = () => {
+  const doDownloadCSS = () => {
     const css = generateCSS();
     const blob = new Blob([css], { type: 'text/css' });
     const url = URL.createObjectURL(blob);
@@ -365,6 +393,54 @@ ${baseRules}`;
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    incrementExportCount();
+  };
+
+  // Check if donation modal should be shown before export
+  const checkDonationAndExecute = (action: () => void) => {
+    const count = getExportCount();
+    if (count >= DONATION_THRESHOLD) {
+      pendingExportAction.current = action;
+      setShowDonationModal(true);
+    } else {
+      action();
+    }
+  };
+
+  // Public handlers that check for donation modal
+  const handleCopyCSS = () => checkDonationAndExecute(doCopyCSS);
+  const handleDownloadTheme = () => checkDonationAndExecute(doDownloadTheme);
+  const handleDownloadCSS = () => checkDonationAndExecute(doDownloadCSS);
+
+  // Handle donation modal continue (proceed without donating)
+  const handleDonationContinue = () => {
+    setShowDonationModal(false);
+    if (pendingExportAction.current) {
+      pendingExportAction.current();
+      pendingExportAction.current = null;
+    }
+  };
+
+  // Handle donation modal close
+  const handleDonationClose = () => {
+    setShowDonationModal(false);
+    pendingExportAction.current = null;
+  };
+
+  // Reset everything to initial state
+  const handleReset = () => {
+    if (confirm('Are you sure you want to reset all settings? This will clear your custom theme and start fresh.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('roam-theme-editor-dark-mode');
+      setSelectedPresetId('default');
+      setMode('light');
+      setLightPalette(palettePresets[0].light);
+      setDarkPalette(palettePresets[0].dark);
+      setTypography(defaultTypography);
+      setElementOverrides([]);
+      setActiveTab('palette');
+      setShowCode(false);
+    }
   };
 
   // Upload theme from JSON
@@ -436,6 +512,16 @@ ${baseRules}`;
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+                </svg>
+              </button>
+              {/* Reset Button */}
+              <button
+                onClick={handleReset}
+                className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                title="Reset all settings"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
             </div>
@@ -862,6 +948,14 @@ ${baseRules}`;
           onSave={handleElementSave}
           onClose={() => setSelectedElementId(null)}
           paletteColors={activePalette.colors}
+        />
+      )}
+
+      {/* Donation Modal */}
+      {showDonationModal && (
+        <DonationModal
+          onClose={handleDonationClose}
+          onContinue={handleDonationContinue}
         />
       )}
     </div>
