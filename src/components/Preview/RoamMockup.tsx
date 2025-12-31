@@ -582,6 +582,29 @@ greet("Roam");`}</code>
                   </table>
                 </ClickableElement>
               </Block>
+
+              {/* Blockquote */}
+              <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
+                <ClickableElement
+                  elementId="blockquote"
+                  onClick={onElementClick}
+                  className="rm-bq mt-1 pl-4 py-2 border-l-4 relative"
+                  style={{
+                    borderLeftColor: colors.primary,
+                    backgroundColor: `${colors.surface}40`,
+                    fontStyle: 'italic',
+                    color: colors.text,
+                    ...getOverrideStyles('blockquote'),
+                  }}
+                >
+                  <p className="text-sm">
+                    "The only way to do great work is to love what you do."
+                  </p>
+                  <cite className="text-xs mt-1 block" style={{ color: colors.textMuted }}>
+                    — Steve Jobs
+                  </cite>
+                </ClickableElement>
+              </Block>
             </div>
           </div>
         </ClickableElement>

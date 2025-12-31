@@ -82,7 +82,7 @@ Click on any element in the **Preview** panel to open the element editor:
 
 #### Editable Elements
 
-The theme editor supports styling for 22 Roam elements across 4 categories:
+The theme editor supports styling for 23 Roam elements across 4 categories:
 
 **Text Elements**
 | Element | CSS Selector | What You Can Customize |
@@ -93,6 +93,7 @@ The theme editor supports styling for 22 Roam elements across 4 categories:
 | Heading 3 | `.rm-heading.rm-level3` | Font size, weight, style, color, prepend/append text |
 | Page Brackets | `.rm-page-ref-brackets` | Color, opacity, font size |
 | Breadcrumbs | `.rm-zoom` | Text color, font size, opacity |
+| Blockquote | `.rm-bq, blockquote` | Border color/width, background, text color, font style, padding |
 
 **Layout Elements**
 | Element | CSS Selector | What You Can Customize |

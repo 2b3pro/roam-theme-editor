@@ -437,6 +437,26 @@ export const roamElements: ElementStyleDefinition[] = [
       { cssProperty: 'font-size', label: 'Font Size', type: 'size', unit: 'px', min: 11, max: 16, step: 1 },
     ],
   },
+  // Blockquote
+  {
+    id: 'blockquote',
+    name: 'Blockquote',
+    selector: '.rm-bq, blockquote',
+    description: 'Block quotes using > syntax',
+    category: 'text',
+    editableProperties: [
+      { cssProperty: 'border-left-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'border-left-width', label: 'Border Width', type: 'size', unit: 'px', min: 2, max: 8, step: 1 },
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+      { cssProperty: 'color', label: 'Text Color', type: 'color' },
+      { cssProperty: 'font-style', label: 'Font Style', type: 'select', options: [
+        { value: 'normal', label: 'Normal' },
+        { value: 'italic', label: 'Italic' },
+      ]},
+      { cssProperty: 'padding', label: 'Padding', type: 'text' },
+      { cssProperty: 'margin', label: 'Margin', type: 'text' },
+    ],
+  },
 ];
 
 // Get element definition by ID

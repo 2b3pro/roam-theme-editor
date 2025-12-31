@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Blockquote element styling (`.rm-bq, blockquote`) with border, background, font style, padding options
 - Sidebar toggle buttons in preview topbar to hide/show left and right sidebars for more preview space
 - Right sidebar is now clickable for direct style editing
-- Full preview coverage: all 22 editable elements are now represented and clickable in the preview
+- Full preview coverage: all 23 editable elements are now represented and clickable in the preview
+  - Blockquote example
   - Query block example
   - Embed block example
   - Table example
