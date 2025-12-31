@@ -14,6 +14,7 @@ import type { ColorPalette, ThemeMode, TypographySettings } from './types/theme'
 import { defaultTypography } from './types/theme';
 import type { ElementStyleOverride } from './types/elementStyles';
 import { getElementById, generateElementCSS } from './types/elementStyles';
+import { generateBaseCSSRules } from './utils/baseCSSRules';
 
 const STORAGE_KEY = 'roam-theme-editor-state';
 const HARMONY_OPTIONS: ColorHarmony[] = ['complementary', 'analogous', 'triadic', 'split-complementary', 'monochromatic'];
@@ -248,6 +249,8 @@ function App() {
   --heading-font: ${typography.headingFont};
   --code-font: ${typography.codeFont};`;
 
+    const baseRules = generateBaseCSSRules();
+
     const lightCSS = `/* Light Mode */
 :root {
   --page-link-color: ${lightPalette.colors.primary};
@@ -259,7 +262,9 @@ function App() {
   --page-bracket-color: ${lightPalette.colors.textMuted};
   --highlight-background-color: ${lightPalette.colors.primary}30;
 ${typographyCSS}
-}`;
+}
+
+${baseRules}`;
 
     const darkCSS = `/* Dark Mode */
 :root {
@@ -272,7 +277,9 @@ ${typographyCSS}
   --page-bracket-color: ${darkPalette.colors.textMuted};
   --highlight-background-color: ${darkPalette.colors.primary}30;
 ${typographyCSS}
-}`;
+}
+
+${baseRules}`;
 
     // Add element-specific overrides
     const elementCSS = generateElementCSS(elementOverrides);
@@ -311,7 +318,9 @@ ${typographyCSS}
     --highlight-background-color: ${darkPalette.colors.primary}30;
 ${typographyCSS}
   }
-}`;
+}
+
+${baseRules}`;
 
     return systemModeCSS + elementSection;
   };
@@ -803,12 +812,24 @@ ${typographyCSS}
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {showCode ? 'CSS Output' : 'Preview'}
               </h2>
-              <button
-                onClick={() => setShowCode(!showCode)}
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
-              >
-                {showCode ? 'Show Preview' : 'Show CSS'}
-              </button>
+              <div className="flex items-center gap-3">
+                {!showCode && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Click elements to edit</span>
+                    {elementOverrides.length > 0 && (
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                        {elementOverrides.length} customized
+                      </span>
+                    )}
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowCode(!showCode)}
+                  className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
+                >
+                  {showCode ? 'Show Preview' : 'Show CSS'}
+                </button>
+              </div>
             </div>
 
             {showCode ? (
@@ -818,15 +839,7 @@ ${typographyCSS}
                 </pre>
               </div>
             ) : (
-              <div className="relative">
-                <div className="absolute top-2 right-2 z-10 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur rounded-lg px-2 py-1 shadow-sm border border-gray-200 dark:border-gray-700">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">Click elements to edit</span>
-                  {elementOverrides.length > 0 && (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
-                      {elementOverrides.length} customized
-                    </span>
-                  )}
-                </div>
+              <div>
                 <RoamMockup
                   palette={activePalette}
                   typography={typography}

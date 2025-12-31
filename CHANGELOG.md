@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-30
+
+### Added
+
+- Comprehensive base CSS rules that apply theme variables to Roam UI elements
+  - Typography applied to `div`, `textarea`, headings, code blocks
+  - Background colors for body, sidebars, topbar
+  - Page links and tags with proper colors and hover states
+  - Block references with border and hover effects
+  - Bullets colored from primary theme color
+  - Tree line colors for block containers
+  - Highlight backgrounds
+  - Checkbox/TODO styling
+  - Code block backgrounds
+  - Reference items styling
+  - Query and embed container styling
+  - Kanban board styling
+  - Table borders
+  - Custom scrollbar styling
+  - Heading font sizes (H1-H3)
+  - Blockquote styling
+  - Menu and popup styling
+
+### Changed
+
+- CSS output is now a complete, functional theme that works out of the box in Roam
+- Previously, only CSS variables were exported; now base application rules are included
+
 ## [1.2.0] - 2025-12-30
 
 ### Added
