@@ -191,12 +191,12 @@ export function RoamMockup({
         </div>
       </div>
 
-      <div className="flex h-[680px]">
+      <div className="flex h-[calc(100vh-16rem)]">
         {/* Left Sidebar */}
         <ClickableElement
           elementId="sidebar"
           onClick={onElementClick}
-          className="roam-sidebar w-52 border-r flex flex-col flex-shrink-0"
+          className="roam-sidebar-container w-52 border-r flex flex-col flex-shrink-0"
           style={{
             backgroundColor: colors.surface,
             borderColor: colors.border,

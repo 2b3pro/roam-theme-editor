@@ -245,13 +245,21 @@ export const roamElements: ElementStyleDefinition[] = [
   {
     id: 'sidebar',
     name: 'Sidebar',
-    selector: '.roam-sidebar',
-    description: 'Left sidebar panel',
+    selector: '.roam-sidebar-container',
+    description: 'Left sidebar panel and text',
     category: 'layout',
     editableProperties: [
       { cssProperty: 'background-color', label: 'Background', type: 'color' },
       { cssProperty: 'width', label: 'Width', type: 'size', unit: 'px', min: 180, max: 320, step: 10 },
       { cssProperty: 'border-right-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'color', label: 'Text Color', type: 'color' },
+      { cssProperty: 'font-size', label: 'Font Size', type: 'size', unit: 'px', min: 11, max: 18, step: 1 },
+      { cssProperty: 'font-weight', label: 'Font Weight', type: 'select', options: [
+        { value: '400', label: 'Normal' },
+        { value: '500', label: 'Medium' },
+        { value: '600', label: 'Semi Bold' },
+      ]},
+      { cssProperty: 'letter-spacing', label: 'Letter Spacing', type: 'size', unit: 'em', min: -0.05, max: 0.2, step: 0.01 },
     ],
   },
   // Highlight
@@ -271,6 +279,162 @@ export const roamElements: ElementStyleDefinition[] = [
         { value: 'italic', label: 'Italic' },
         { value: 'oblique', label: 'Oblique' },
       ]},
+    ],
+  },
+  // Right Sidebar
+  {
+    id: 'right-sidebar',
+    name: 'Right Sidebar',
+    selector: '#right-sidebar',
+    description: 'Right sidebar panel for linked references',
+    category: 'layout',
+    editableProperties: [
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+      { cssProperty: 'width', label: 'Width', type: 'size', unit: 'px', min: 200, max: 500, step: 10 },
+      { cssProperty: 'border-left-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'color', label: 'Text Color', type: 'color' },
+      { cssProperty: 'font-size', label: 'Font Size', type: 'size', unit: 'px', min: 11, max: 16, step: 1 },
+    ],
+  },
+  // Main Content Area
+  {
+    id: 'main-content',
+    name: 'Main Content',
+    selector: '.roam-body-main, .roam-article',
+    description: 'Main content area and article body',
+    category: 'layout',
+    editableProperties: [
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+      { cssProperty: 'max-width', label: 'Max Width', type: 'size', unit: 'px', min: 600, max: 1200, step: 50 },
+      { cssProperty: 'padding', label: 'Padding', type: 'text' },
+    ],
+  },
+  // Block Container
+  {
+    id: 'block-container',
+    name: 'Block Container',
+    selector: '.roam-block-container',
+    description: 'Container for each block and its children',
+    category: 'layout',
+    editableProperties: [
+      { cssProperty: 'border-left-color', label: 'Tree Line Color', type: 'color' },
+      { cssProperty: 'border-left-width', label: 'Tree Line Width', type: 'size', unit: 'px', min: 0, max: 4, step: 1 },
+      { cssProperty: 'margin-left', label: 'Indent', type: 'size', unit: 'px', min: 0, max: 40, step: 2 },
+      { cssProperty: 'padding-left', label: 'Padding Left', type: 'size', unit: 'px', min: 0, max: 24, step: 2 },
+    ],
+  },
+  // Query
+  {
+    id: 'query',
+    name: 'Query',
+    selector: '.rm-query',
+    description: 'Query blocks {{query:}}',
+    category: 'interactive',
+    editableProperties: [
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+      { cssProperty: 'border-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'border-radius', label: 'Border Radius', type: 'size', unit: 'px', min: 0, max: 12, step: 1 },
+      { cssProperty: 'padding', label: 'Padding', type: 'text' },
+    ],
+  },
+  // External Links
+  {
+    id: 'external-link',
+    name: 'External Link',
+    selector: 'a.rm-alias-external, a[href^="http"]',
+    description: 'Links to external websites',
+    category: 'interactive',
+    editableProperties: [
+      { cssProperty: 'color', label: 'Color', type: 'color' },
+      { cssProperty: 'text-decoration', label: 'Text Decoration', type: 'select', options: [
+        { value: 'none', label: 'None' },
+        { value: 'underline', label: 'Underline' },
+        { value: 'underline dotted', label: 'Dotted Underline' },
+      ]},
+      { cssProperty: 'font-style', label: 'Font Style', type: 'select', options: [
+        { value: 'normal', label: 'Normal' },
+        { value: 'italic', label: 'Italic' },
+      ]},
+    ],
+  },
+  // Page Reference Brackets
+  {
+    id: 'page-brackets',
+    name: 'Page Brackets',
+    selector: '.rm-page-ref-brackets',
+    description: 'The [[ ]] brackets around page links',
+    category: 'text',
+    editableProperties: [
+      { cssProperty: 'color', label: 'Color', type: 'color' },
+      { cssProperty: 'opacity', label: 'Opacity', type: 'number', min: 0, max: 1, step: 0.1 },
+      { cssProperty: 'font-size', label: 'Font Size', type: 'size', unit: 'em', min: 0.5, max: 1, step: 0.05 },
+    ],
+  },
+  // TODO Checkbox
+  {
+    id: 'todo-checkbox',
+    name: 'TODO Checkbox',
+    selector: '.check-container, .rm-block__input--todo',
+    description: 'TODO/DONE checkbox styling',
+    category: 'interactive',
+    editableProperties: [
+      { cssProperty: 'color', label: 'Checkbox Color', type: 'color' },
+      { cssProperty: 'border-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+    ],
+  },
+  // Breadcrumbs / Zoom Path
+  {
+    id: 'breadcrumbs',
+    name: 'Breadcrumbs',
+    selector: '.rm-zoom, .zoom-path-view',
+    description: 'Page path / zoom breadcrumbs',
+    category: 'text',
+    editableProperties: [
+      { cssProperty: 'color', label: 'Text Color', type: 'color' },
+      { cssProperty: 'font-size', label: 'Font Size', type: 'size', unit: 'px', min: 10, max: 16, step: 1 },
+      { cssProperty: 'opacity', label: 'Opacity', type: 'number', min: 0.3, max: 1, step: 0.1 },
+    ],
+  },
+  // Embed Container
+  {
+    id: 'embed',
+    name: 'Embed',
+    selector: '.rm-embed-container',
+    description: 'Embedded block container {{embed:}}',
+    category: 'layout',
+    editableProperties: [
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+      { cssProperty: 'border-left-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'border-left-width', label: 'Border Width', type: 'size', unit: 'px', min: 0, max: 6, step: 1 },
+      { cssProperty: 'padding', label: 'Padding', type: 'text' },
+      { cssProperty: 'border-radius', label: 'Border Radius', type: 'size', unit: 'px', min: 0, max: 8, step: 1 },
+    ],
+  },
+  // Kanban Board
+  {
+    id: 'kanban',
+    name: 'Kanban Board',
+    selector: '.kanban-board, .rm-kanban-board',
+    description: 'Kanban board columns',
+    category: 'layout',
+    editableProperties: [
+      { cssProperty: 'background-color', label: 'Column Background', type: 'color' },
+      { cssProperty: 'border-radius', label: 'Border Radius', type: 'size', unit: 'px', min: 0, max: 12, step: 1 },
+      { cssProperty: 'padding', label: 'Padding', type: 'text' },
+    ],
+  },
+  // Table
+  {
+    id: 'table',
+    name: 'Table',
+    selector: '.rm-table, table.roam-table',
+    description: 'Table styling',
+    category: 'layout',
+    editableProperties: [
+      { cssProperty: 'background-color', label: 'Background', type: 'color' },
+      { cssProperty: 'border-color', label: 'Border Color', type: 'color' },
+      { cssProperty: 'font-size', label: 'Font Size', type: 'size', unit: 'px', min: 11, max: 16, step: 1 },
     ],
   },
 ];

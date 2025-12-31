@@ -80,6 +80,49 @@ Click on any element in the **Preview** panel to open the element editor:
 - Add prepend/append text or emojis (e.g., add icons before headings)
 - Write custom CSS for advanced styling
 
+#### Editable Elements
+
+The theme editor supports styling for 22 Roam elements across 4 categories:
+
+**Text Elements**
+| Element | CSS Selector | What You Can Customize |
+|---------|--------------|------------------------|
+| Page Title | `.rm-title-display` | Font size, weight, style, color, letter spacing |
+| Heading 1 | `.rm-heading.rm-level1` | Font size, weight, style, color, prepend/append text |
+| Heading 2 | `.rm-heading.rm-level2` | Font size, weight, style, color, prepend/append text |
+| Heading 3 | `.rm-heading.rm-level3` | Font size, weight, style, color, prepend/append text |
+| Page Brackets | `.rm-page-ref-brackets` | Color, opacity, font size |
+| Breadcrumbs | `.rm-zoom` | Text color, font size, opacity |
+
+**Layout Elements**
+| Element | CSS Selector | What You Can Customize |
+|---------|--------------|------------------------|
+| Left Sidebar | `.roam-sidebar-container` | Background, width, border, text color, font size/weight |
+| Right Sidebar | `#right-sidebar` | Background, width, border, text color, font size |
+| Main Content | `.roam-body-main` | Background, max width, padding |
+| Block Container | `.roam-block-container` | Tree line color/width, indent, padding |
+| Bullet | `.rm-bullet` | Color, size, border radius |
+| Embed | `.rm-embed-container` | Background, border, padding, border radius |
+| Kanban Board | `.kanban-board` | Column background, border radius, padding |
+| Table | `.rm-table` | Background, border color, font size |
+
+**Interactive Elements**
+| Element | CSS Selector | What You Can Customize |
+|---------|--------------|------------------------|
+| Page Link | `.rm-page-ref--link` | Color, text decoration, font weight/style |
+| Tag | `.rm-page-ref--tag` | Text/background color, border radius, padding, prepend/append |
+| Block Reference | `.rm-block-ref` | Background, text color, border radius, padding |
+| External Link | `a.rm-alias-external` | Color, text decoration, font style |
+| Query | `.rm-query` | Background, border, border radius, padding |
+| TODO Checkbox | `.check-container` | Checkbox color, border, background |
+
+**Color Elements**
+| Element | CSS Selector | What You Can Customize |
+|---------|--------------|------------------------|
+| Code Block | `.rm-code-block` | Background, text color, border radius, padding, font size |
+| Inline Code | `code` | Background, text color, border radius, padding |
+| Highlight | `.rm-highlight` | Background, text color, padding, border radius |
+
 ### 5. Check Accessibility
 
 Use the **Contrast tab** to verify your color choices meet WCAG accessibility standards.

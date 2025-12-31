@@ -31,6 +31,7 @@ export function ElementEditorModal({
   const [afterStyles, setAfterStyles] = useState<Record<string, string>>(override?.afterStyles || {});
   const [customCSS, setCustomCSS] = useState(override?.customCSS || '');
   const modalRef = useRef<HTMLDivElement>(null);
+  const customCSSRef = useRef<HTMLTextAreaElement>(null);
 
   // Close on Escape key
   useEffect(() => {
@@ -78,6 +79,21 @@ export function ElementEditorModal({
     setBeforeStyles({});
     setAfterStyles({});
     setCustomCSS('');
+  };
+
+  // Insert CSS template on focus if empty
+  const handleCustomCSSFocus = () => {
+    if (!customCSS.trim() && customCSSRef.current) {
+      const template = `${element.selector} {\n  \n}`;
+      setCustomCSS(template);
+      // Position cursor inside the braces (after the 2 spaces on line 2)
+      requestAnimationFrame(() => {
+        if (customCSSRef.current) {
+          const cursorPosition = template.indexOf('\n  \n') + 4;
+          customCSSRef.current.setSelectionRange(cursorPosition, cursorPosition);
+        }
+      });
+    }
   };
 
   // Generate CSS preview from current styles
@@ -248,9 +264,11 @@ export function ElementEditorModal({
                   Additional Custom CSS
                 </label>
                 <textarea
+                  ref={customCSSRef}
                   value={customCSS}
                   onChange={(e) => setCustomCSS(e.target.value)}
-                  placeholder={`/* Add advanced CSS here */\n${element.selector}:hover {\n  /* hover styles */\n}`}
+                  onFocus={handleCustomCSSFocus}
+                  placeholder={`/* Click to insert template */`}
                   className="w-full h-40 px-4 py-3 bg-gray-900 dark:bg-black text-gray-100 font-mono text-sm rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                   spellCheck={false}
                 />
