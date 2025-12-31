@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-30
+
+### Added
+
+- Sidebar toggle buttons in preview topbar to hide/show left and right sidebars for more preview space
+- Right sidebar is now clickable for direct style editing
+- Full preview coverage: all 22 editable elements are now represented and clickable in the preview
+  - Query block example
+  - Embed block example
+  - Table example
+  - Page brackets on page links
+  - Breadcrumbs navigation
+  - External link with icon
+  - TODO checkbox
+
+### Changed
+
+- Right sidebar conditionally renders based on toggle state
+- Visual feedback on toggle buttons (highlighted when sidebar is hidden)
+
 ## [1.1.0] - 2025-12-30
 
 ### Added

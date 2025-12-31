@@ -115,6 +115,8 @@ export function RoamMockup({
   elementOverrides = [],
 }: RoamMockupProps) {
   const { colors } = palette;
+  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
+  const [showRightSidebar, setShowRightSidebar] = useState(true);
 
   // Load Google Fonts dynamically
   useGoogleFonts(typography);
@@ -165,8 +167,13 @@ export function RoamMockup({
       >
         <div className="flex items-center gap-3">
           <button
-            className="p-1.5 rounded hover:opacity-80"
-            style={{ color: colors.textMuted }}
+            onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+            className="p-1.5 rounded hover:opacity-80 transition-colors"
+            style={{
+              color: showLeftSidebar ? colors.textMuted : colors.primary,
+              backgroundColor: showLeftSidebar ? 'transparent' : `${colors.primary}15`,
+            }}
+            title={showLeftSidebar ? 'Hide left sidebar' : 'Show left sidebar'}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -188,39 +195,77 @@ export function RoamMockup({
             </svg>
             <span>Find or Create Page</span>
           </div>
+          <button
+            onClick={() => setShowRightSidebar(!showRightSidebar)}
+            className="p-1.5 rounded hover:opacity-80 transition-colors"
+            style={{
+              color: showRightSidebar ? colors.textMuted : colors.primary,
+              backgroundColor: showRightSidebar ? 'transparent' : `${colors.primary}15`,
+            }}
+            title={showRightSidebar ? 'Hide right sidebar' : 'Show right sidebar'}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
 
       <div className="flex h-[calc(100vh-16rem)]">
         {/* Left Sidebar */}
-        <ClickableElement
-          elementId="sidebar"
-          onClick={onElementClick}
-          className="roam-sidebar-container w-52 border-r flex flex-col flex-shrink-0"
-          style={{
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            ...getOverrideStyles('sidebar'),
-          }}
-        >
-          <div className="p-3 space-y-1">
-            <SidebarItem icon="📅" label="Daily Notes" active colors={colors} />
-            <SidebarItem icon="🔍" label="Graph Overview" colors={colors} />
-            <SidebarItem icon="⭐" label="Shortcuts" colors={colors} />
-          </div>
-          <div className="px-3 py-2 text-xs font-medium uppercase tracking-wide" style={{ color: colors.textMuted }}>
-            Shortcuts
-          </div>
-          <div className="px-3 space-y-1 flex-1">
-            <SidebarItem label="Project Ideas" colors={colors} />
-            <SidebarItem label="Reading List" colors={colors} />
-            <SidebarItem label="Weekly Review" colors={colors} />
-          </div>
-        </ClickableElement>
+        {showLeftSidebar && (
+          <ClickableElement
+            elementId="sidebar"
+            onClick={onElementClick}
+            className="roam-sidebar-container w-52 border-r flex flex-col flex-shrink-0"
+            style={{
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              ...getOverrideStyles('sidebar'),
+            }}
+          >
+            <div className="p-3 space-y-1">
+              <SidebarItem icon="📅" label="Daily Notes" active colors={colors} />
+              <SidebarItem icon="🔍" label="Graph Overview" colors={colors} />
+              <SidebarItem icon="⭐" label="Shortcuts" colors={colors} />
+            </div>
+            <div className="px-3 py-2 text-xs font-medium uppercase tracking-wide" style={{ color: colors.textMuted }}>
+              Shortcuts
+            </div>
+            <div className="px-3 space-y-1 flex-1">
+              <SidebarItem label="Project Ideas" colors={colors} />
+              <SidebarItem label="Reading List" colors={colors} />
+              <SidebarItem label="Weekly Review" colors={colors} />
+            </div>
+          </ClickableElement>
+        )}
 
         {/* Main Content */}
-        <div className="roam-main flex-1 overflow-auto p-6">
+        <ClickableElement
+          elementId="main-content"
+          onClick={onElementClick}
+          className="roam-body-main flex-1 overflow-auto p-6"
+          style={{
+            backgroundColor: colors.background,
+            ...getOverrideStyles('main-content'),
+          }}
+        >
           <div className="max-w-2xl">
+            {/* Breadcrumbs */}
+            <ClickableElement
+              elementId="breadcrumbs"
+              onClick={onElementClick}
+              className="rm-zoom flex items-center gap-1 text-xs mb-2 relative"
+              style={{
+                color: colors.textMuted,
+                ...getOverrideStyles('breadcrumbs'),
+              }}
+            >
+              <span>Daily Notes</span>
+              <span style={{ opacity: 0.5 }}>/</span>
+              <span style={{ color: colors.text }}>December 2025</span>
+            </ClickableElement>
+
             {/* Page Title */}
             <ClickableElement
               elementId="page-title"
@@ -239,15 +284,27 @@ export function RoamMockup({
             <div className="space-y-2">
               <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
                 Welcome to the{' '}
-                <ClickableElement
-                  elementId="page-link"
-                  onClick={onElementClick}
-                  inline
-                  className="rm-page-ref--link cursor-pointer hover:underline relative"
-                  style={{ color: colors.primary, ...getOverrideStyles('page-link') }}
-                >
-                  [[Roam Theme Editor]]
-                </ClickableElement>
+                <span className="inline-flex items-center">
+                  <ClickableElement
+                    elementId="page-brackets"
+                    onClick={onElementClick}
+                    inline
+                    className="rm-page-ref-brackets relative"
+                    style={{ color: colors.textMuted, ...getOverrideStyles('page-brackets') }}
+                  >
+                    [[
+                  </ClickableElement>
+                  <ClickableElement
+                    elementId="page-link"
+                    onClick={onElementClick}
+                    inline
+                    className="rm-page-ref--link cursor-pointer hover:underline relative"
+                    style={{ color: colors.primary, ...getOverrideStyles('page-link') }}
+                  >
+                    Roam Theme Editor
+                  </ClickableElement>
+                  <span className="rm-page-ref-brackets" style={{ color: colors.textMuted, ...getOverrideStyles('page-brackets') }}>]]</span>
+                </span>
                 ! This is a preview of how your theme will look.
               </Block>
 
@@ -404,26 +461,35 @@ greet("Roam");`}</code>
               {/* External Link */}
               <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
                 External link:{' '}
-                <a
-                  href="#"
-                  className="inline-flex items-center gap-1 hover:underline"
-                  style={{ color: colors.primary }}
-                  onClick={(e) => e.preventDefault()}
+                <ClickableElement
+                  elementId="external-link"
+                  onClick={onElementClick}
+                  inline
+                  className="rm-alias-external inline-flex items-center gap-1 hover:underline relative"
+                  style={{ color: colors.primary, ...getOverrideStyles('external-link') }}
                 >
                   https://roamresearch.com
                   <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
-                </a>
+                </ClickableElement>
               </Block>
 
               {/* TODO Item */}
               <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
                 <span className="inline-flex items-center gap-2">
-                  <span
-                    className="w-4 h-4 rounded border-2 flex-shrink-0"
-                    style={{ borderColor: colors.textMuted }}
-                  />
+                  <ClickableElement
+                    elementId="todo-checkbox"
+                    onClick={onElementClick}
+                    inline
+                    className="check-container w-4 h-4 rounded border-2 flex-shrink-0 relative"
+                    style={{
+                      borderColor: colors.textMuted,
+                      ...getOverrideStyles('todo-checkbox'),
+                    }}
+                  >
+                    <span></span>
+                  </ClickableElement>
                   <span>{'{{[[TODO]]}}'} Review theme settings</span>
                 </span>
               </Block>
@@ -445,64 +511,140 @@ greet("Roam");`}</code>
                   ((referenced block))
                 </ClickableElement>
               </Block>
+
+              {/* Embed */}
+              <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
+                Embedded content:
+                <ClickableElement
+                  elementId="embed"
+                  onClick={onElementClick}
+                  className="rm-embed-container mt-2 pl-3 py-2 border-l-2 relative"
+                  style={{
+                    borderLeftColor: colors.primary,
+                    backgroundColor: `${colors.surface}80`,
+                    ...getOverrideStyles('embed'),
+                  }}
+                >
+                  <div className="text-sm" style={{ color: colors.text }}>
+                    This is an embedded block from another page
+                  </div>
+                </ClickableElement>
+              </Block>
+
+              {/* Query */}
+              <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
+                <ClickableElement
+                  elementId="query"
+                  onClick={onElementClick}
+                  className="rm-query mt-1 p-3 rounded-lg border relative"
+                  style={{
+                    backgroundColor: `${colors.surface}50`,
+                    borderColor: colors.border,
+                    ...getOverrideStyles('query'),
+                  }}
+                >
+                  <div className="text-xs font-medium mb-2" style={{ color: colors.textMuted }}>
+                    {'{{query: {and: [[TODO]] [[Project]]}}}'}
+                  </div>
+                  <div className="text-sm" style={{ color: colors.text }}>
+                    2 results
+                  </div>
+                </ClickableElement>
+              </Block>
+
+              {/* Table */}
+              <Block colors={colors} onElementClick={onElementClick} overrideStyles={getOverrideStyles('bullet')}>
+                <ClickableElement
+                  elementId="table"
+                  onClick={onElementClick}
+                  className="rm-table mt-1 overflow-hidden rounded relative"
+                  style={{
+                    ...getOverrideStyles('table'),
+                  }}
+                >
+                  <table className="w-full text-sm" style={{ borderColor: colors.border }}>
+                    <thead>
+                      <tr style={{ backgroundColor: colors.surface }}>
+                        <th className="px-3 py-1.5 text-left border-b" style={{ borderColor: colors.border, color: colors.text }}>Name</th>
+                        <th className="px-3 py-1.5 text-left border-b" style={{ borderColor: colors.border, color: colors.text }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="px-3 py-1.5 border-b" style={{ borderColor: colors.border, color: colors.text }}>Task A</td>
+                        <td className="px-3 py-1.5 border-b" style={{ borderColor: colors.border, color: colors.textMuted }}>Done</td>
+                      </tr>
+                      <tr>
+                        <td className="px-3 py-1.5" style={{ color: colors.text }}>Task B</td>
+                        <td className="px-3 py-1.5" style={{ color: colors.textMuted }}>In Progress</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </ClickableElement>
+              </Block>
             </div>
           </div>
-        </div>
+        </ClickableElement>
 
         {/* Right Sidebar - Linked References */}
-        <div
-          className="roam-right-sidebar w-64 border-l flex-shrink-0 overflow-auto"
-          style={{
-            backgroundColor: colors.background,
-            borderColor: colors.border,
-          }}
-        >
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold" style={{ color: colors.text }}>
-                Linked References
-              </h3>
-              <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.surface, color: colors.textMuted }}>
-                3
-              </span>
-            </div>
+        {showRightSidebar && (
+          <ClickableElement
+            elementId="right-sidebar"
+            onClick={onElementClick}
+            className="w-64 border-l flex-shrink-0 overflow-auto"
+            style={{
+              backgroundColor: colors.background,
+              borderColor: colors.border,
+              ...getOverrideStyles('right-sidebar'),
+            }}
+          >
+            <div id="right-sidebar" className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold" style={{ color: colors.text }}>
+                  Linked References
+                </h3>
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.surface, color: colors.textMuted }}>
+                  3
+                </span>
+              </div>
 
-            {/* Reference items */}
-            <div className="space-y-3">
-              <ReferenceItem
-                title="Project Ideas"
-                content="Check out the [[Roam Theme Editor]] for customizing..."
-                colors={colors}
-              />
-              <ReferenceItem
-                title="December 24th, 2025"
-                content="Started working on theme customization with..."
-                colors={colors}
-              />
-              <ReferenceItem
-                title="Weekly Review"
-                content="Need to finish the [[Roam Theme Editor]] project"
-                colors={colors}
-              />
-            </div>
+              {/* Reference items */}
+              <div className="space-y-3">
+                <ReferenceItem
+                  title="Project Ideas"
+                  content="Check out the [[Roam Theme Editor]] for customizing..."
+                  colors={colors}
+                />
+                <ReferenceItem
+                  title="December 24th, 2025"
+                  content="Started working on theme customization with..."
+                  colors={colors}
+                />
+                <ReferenceItem
+                  title="Weekly Review"
+                  content="Need to finish the [[Roam Theme Editor]] project"
+                  colors={colors}
+                />
+              </div>
 
-            <div className="mt-6 flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold" style={{ color: colors.text }}>
-                Unlinked References
-              </h3>
-              <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.surface, color: colors.textMuted }}>
-                1
-              </span>
+              <div className="mt-6 flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold" style={{ color: colors.text }}>
+                  Unlinked References
+                </h3>
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: colors.surface, color: colors.textMuted }}>
+                  1
+                </span>
+              </div>
+              <div
+                className="text-xs p-2 rounded"
+                style={{ backgroundColor: colors.surface, color: colors.textMuted }}
+              >
+                <span style={{ color: colors.text }}>Reading List</span>
+                <p className="mt-1 opacity-75">...theme editor tools and resources...</p>
+              </div>
             </div>
-            <div
-              className="text-xs p-2 rounded"
-              style={{ backgroundColor: colors.surface, color: colors.textMuted }}
-            >
-              <span style={{ color: colors.text }}>Reading List</span>
-              <p className="mt-1 opacity-75">...theme editor tools and resources...</p>
-            </div>
-          </div>
-        </div>
+          </ClickableElement>
+        )}
       </div>
     </div>
   );
